@@ -204,7 +204,7 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   // const [dueDate, setDueDate] = useState("");
   const { user } = useContext(AuthContext);
 
-  const { colorMode, toggleColorMode } = useContext(ColorModeContext);
+  const { colorMode } = useContext(ColorModeContext);
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
@@ -468,8 +468,8 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             })()}
           </Typography>
 
-          <IconButton edge="start" onClick={toggleColorMode}>
-            {theme.mode === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
+          <IconButton edge="start" onClick={colorMode.toggleColorMode}>
+            {theme.palette.type === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
           </IconButton>
 					{connectionWarning && (
 						<Tooltip title="Há conexões desconectadas">
