@@ -218,9 +218,10 @@ Em validação:
 
 ---
 - Correção Dark mode
+- Exibir quantidade de filas em conexão
+
 - Fecha automaticamente a avaliação 3 mensagens ignoradas. / Rating Index
 - Evita mandar mensagem de fora do expediente quando está em avaliação.
-- Exibir quantidade de filas em conexão
 - Remoção do espaço em inicio de frase de inatividade.
 - Monitoramento do status dos usuários
 

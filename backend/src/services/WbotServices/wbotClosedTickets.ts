@@ -15,7 +15,6 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
   // @ts-ignore: Unreachable code error
   const closeTicket = async (ticket: any, currentStatus: any, body: any) => {
     if (currentStatus === 'nps') {
-
       await ticket.update({
         status: "closed",
         //userId: ticket.userId || null,
@@ -23,9 +22,7 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         unreadMessages: 0,
         amountUseBotQueues: 0
       });
-
     } else if (currentStatus === 'open') {
-
       await ticket.update({
         status: "closed",
         //  userId: ticket.userId || null,
@@ -33,9 +30,7 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         unreadMessages: 0,
         amountUseBotQueues: 0
       });
-
     } else {
-
       await ticket.update({
         status: "closed",
         //userId: ticket.userId || null,
@@ -46,7 +41,6 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
 
   const io = getIO();
   try {
-
     const { rows: tickets } = await Ticket.findAndCountAll({
       where: { status: { [Op.in]: ["open"] }, companyId },
       order: [["updatedAt", "DESC"]]
@@ -60,13 +54,13 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
           ticketId: ticket.id,
           finishedAt: null,
         }
-      })
+      });
 
       if (!whatsapp) return;
 
       let {
         expiresInactiveMessage, //mensage de encerramento por inatividade      
-        expiresTicket //tempo em horas para fechar ticket automaticamente
+        expiresTicket //tempo em minutos para fechar ticket automaticamente
       } = whatsapp
 
 
@@ -78,19 +72,16 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         //mensagem de encerramento por inatividade
         const bodyExpiresMessageInactive = formatBody(`\u200e${expiresInactiveMessage}`, showTicket.contact);
 
-        const dataLimite = new Date()
-        dataLimite.setMinutes(dataLimite.getMinutes() - Number(expiresTicket));
+        const dataUltimaInteracaoChamado = new Date(showTicket.updatedAt);
+        const dataLimite = new Date(dataUltimaInteracaoChamado);
+        dataLimite.setMinutes(dataLimite.getMinutes() + Number(expiresTicket));
 
         if (showTicket.status === "open" && !showTicket.isGroup) {
-          const dataUltimaInteracaoChamado = new Date(showTicket.updatedAt)
-
-          if (dataUltimaInteracaoChamado < dataLimite && showTicket.fromMe) {
-
+          if (new Date() > dataLimite) {
             closeTicket(showTicket, showTicket.status, bodyExpiresMessageInactive);
 
             if (expiresInactiveMessage !== "" && expiresInactiveMessage !== undefined) {
               const sentMessage = await SendWhatsAppMessage({ body: bodyExpiresMessageInactive, ticket: showTicket });
-
               await verifyMessage(sentMessage, showTicket, showTicket.contact);
             }
 
@@ -99,7 +90,7 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
               closedAt: moment().toDate(),
               whatsappId: ticket.whatsappId,
               userId: ticket.userId,
-            })
+            });
 
             io.to("open").emit(`company-${companyId}-ticket`, {
               action: "delete",
@@ -111,7 +102,6 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
     });
 
   } catch (e: any) {
-    console.log('e', e)
+    console.log('e', e);
   }
-
 }

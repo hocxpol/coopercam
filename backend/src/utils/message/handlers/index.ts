@@ -322,7 +322,7 @@ export const checkOutOfHours = async (
       whatsappId: ticket.whatsappId
     });
 
-    if (ticketTraking && verifyRating(ticketTraking)) {
+    if (ticketTraking && await verifyRating(ticketTraking)) {
       return { isOutOfHours: false, message: null };
     }
 
@@ -559,7 +559,7 @@ export const handleMessage = async (
         whatsappId: wbot.id!
       });
 
-      const isRating = ticketTraking !== null && verifyRating(ticketTraking);
+      const isRating = ticketTraking !== null && await verifyRating(ticketTraking);
 
       if (isRating) {
         const rate = parseFloat(bodyMessage);
@@ -568,6 +568,8 @@ export const handleMessage = async (
             `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
             { text: "Por favor, responda apenas com 1, 2 ou 3 para avaliar nosso atendimento." }
           );
+          // Verifica se excedeu o limite de tentativas
+          await checkMessagesWithoutRating(ticket, ticketTraking);
           return;
         }
         await handleRating(rate, ticket, ticketTraking);
@@ -595,7 +597,7 @@ export const handleMessage = async (
           whatsappId: wbot.id!
         });
 
-        const isRating = ticketTraking !== null && verifyRating(ticketTraking);
+        const isRating = ticketTraking !== null && await verifyRating(ticketTraking);
 
         // Se não estiver em avaliação, verifica o horário
         if (!isRating) {

@@ -13,17 +13,23 @@ import { Op } from "sequelize";
 // Número máximo de tentativas de avaliação
 const MAX_RATING_ATTEMPTS = 3;
 
-// Map para armazenar as tentativas de avaliação em memória
-const ratingAttemptsMap = new Map<number, number>();
-
 /**
  * Verifica se um ticket está elegível para avaliação
  * @param ticketTraking - O objeto de tracking do ticket
  * @returns boolean indicando se o ticket pode ser avaliado
  */
-export const verifyRating = (ticketTraking: TicketTraking): boolean => {
+export const verifyRating = async (ticketTraking: TicketTraking): Promise<boolean> => {
   try {
-    const attempts = ratingAttemptsMap.get(ticketTraking.id) || 0;
+    // Busca a contagem de tentativas no banco
+    const attempts = await Message.count({
+      where: {
+        ticketId: ticketTraking.ticketId,
+        fromMe: false,
+        createdAt: {
+          [Op.gt]: ticketTraking.ratingAt
+        }
+      }
+    });
     
     if (
       ticketTraking &&
@@ -52,9 +58,16 @@ export const checkMessagesWithoutRating = async (
   try {
     if (!ticketTraking.ratingAt) return;
 
-    // Incrementa o contador de tentativas em memória
-    const attempts = (ratingAttemptsMap.get(ticketTraking.id) || 0) + 1;
-    ratingAttemptsMap.set(ticketTraking.id, attempts);
+    // Conta as mensagens ignoradas desde o início da avaliação
+    const attempts = await Message.count({
+      where: {
+        ticketId: ticket.id,
+        fromMe: false,
+        createdAt: {
+          [Op.gt]: ticketTraking.ratingAt
+        }
+      }
+    });
 
     // Se excedeu o limite de tentativas, encerra o modo de avaliação
     if (attempts >= MAX_RATING_ATTEMPTS) {
@@ -87,9 +100,6 @@ const endRatingMode = async (
 ): Promise<void> => {
   try {
     const io = getIO();
-
-    // Remove as tentativas do Map
-    ratingAttemptsMap.delete(ticketTraking.id);
 
     // Atualiza o tracking
     await ticketTraking.update({
@@ -155,9 +165,6 @@ export const handleRating = async (
       await SendWhatsAppMessage({ body, ticket });
     }
 
-    // Remove as tentativas do Map
-    ratingAttemptsMap.delete(ticketTraking.id);
-
     // Atualiza o tracking do ticket
     await ticketTraking.update({
       finishedAt: moment().toDate(),
@@ -206,9 +213,6 @@ export const resetRatingOnReopen = async (
   ticketTraking: TicketTraking
 ): Promise<void> => {
   try {
-    // Remove as tentativas do Map
-    ratingAttemptsMap.delete(ticketTraking.id);
-
     // Atualiza o tracking
     await ticketTraking.update({
       ratingAt: null,
