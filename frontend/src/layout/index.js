@@ -466,8 +466,12 @@ const LoggedInLayout = ({ children }) => {
             })()}
           </Typography>
 
-          <IconButton edge="start" onClick={colorMode.toggleColorMode}>
-            {theme.palette.type === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
+          <IconButton 
+            edge="start" 
+            onClick={colorMode.toggleColorMode}
+            style={{ color: "white" }}
+          >
+            {theme.palette.type === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
 					{connectionWarning && (
 						<Tooltip title="Há conexões desconectadas">
