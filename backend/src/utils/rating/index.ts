@@ -13,6 +13,9 @@ import { Op } from "sequelize";
 // Número máximo de tentativas de avaliação
 const MAX_RATING_ATTEMPTS = 3;
 
+// Map para armazenar as tentativas de avaliação em memória
+const ratingAttemptsMap = new Map<number, number>();
+
 /**
  * Verifica se um ticket está elegível para avaliação
  * @param ticketTraking - O objeto de tracking do ticket
@@ -20,11 +23,13 @@ const MAX_RATING_ATTEMPTS = 3;
  */
 export const verifyRating = (ticketTraking: TicketTraking): boolean => {
   try {
+    const attempts = ratingAttemptsMap.get(ticketTraking.id) || 0;
+    
     if (
       ticketTraking &&
       ticketTraking.ratingAt !== null &&
       ticketTraking.rated === false &&
-      ticketTraking.ratingAttempts < MAX_RATING_ATTEMPTS
+      attempts < MAX_RATING_ATTEMPTS
     ) {
       return true;
     }
@@ -47,11 +52,9 @@ export const checkMessagesWithoutRating = async (
   try {
     if (!ticketTraking.ratingAt) return;
 
-    // Incrementa o contador de tentativas
-    const attempts = (ticketTraking.ratingAttempts || 0) + 1;
-    await ticketTraking.update({
-      ratingAttempts: attempts
-    });
+    // Incrementa o contador de tentativas em memória
+    const attempts = (ratingAttemptsMap.get(ticketTraking.id) || 0) + 1;
+    ratingAttemptsMap.set(ticketTraking.id, attempts);
 
     // Se excedeu o limite de tentativas, encerra o modo de avaliação
     if (attempts >= MAX_RATING_ATTEMPTS) {
@@ -85,11 +88,13 @@ const endRatingMode = async (
   try {
     const io = getIO();
 
+    // Remove as tentativas do Map
+    ratingAttemptsMap.delete(ticketTraking.id);
+
     // Atualiza o tracking
     await ticketTraking.update({
       ratingAt: null,
-      rated: true,
-      ratingAttempts: 0
+      rated: true
     });
 
     // Atualiza o ticket para permitir atendimento normal
@@ -150,11 +155,13 @@ export const handleRating = async (
       await SendWhatsAppMessage({ body, ticket });
     }
 
+    // Remove as tentativas do Map
+    ratingAttemptsMap.delete(ticketTraking.id);
+
     // Atualiza o tracking do ticket
     await ticketTraking.update({
       finishedAt: moment().toDate(),
-      rated: true,
-      ratingAttempts: 0
+      rated: true
     });
 
     // Atualiza o ticket
@@ -199,28 +206,14 @@ export const resetRatingOnReopen = async (
   ticketTraking: TicketTraking
 ): Promise<void> => {
   try {
-    // Reseta o tracking da avaliação
+    // Remove as tentativas do Map
+    ratingAttemptsMap.delete(ticketTraking.id);
+
+    // Atualiza o tracking
     await ticketTraking.update({
       ratingAt: null,
-      rated: true,
-      ratingAttempts: 0
+      rated: false
     });
-
-    // Atualiza o ticket para o novo atendimento
-    await ticket.update({
-      status: "pending"
-    });
-
-    // Notifica os clientes conectados
-    const io = getIO();
-    io.to(`company-${ticket.companyId}-${ticket.status}`)
-      .to(`queue-${ticket.queueId}-${ticket.status}`)
-      .to(ticket.id.toString())
-      .emit(`company-${ticket.companyId}-ticket`, {
-        action: "update",
-        ticket,
-        ticketId: ticket.id
-      });
   } catch (error) {
     Sentry.captureException(error);
   }
