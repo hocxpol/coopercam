@@ -2,7 +2,6 @@ import * as Yup from "yup";
 import { Request, Response } from "express";
 import { getIO } from "../libs/socket";
 import moment from "moment";
-import { Model } from "sequelize-typescript";
 
 import ListContactsService from "../services/ContactServices/ListContactsService";
 import CreateContactService from "../services/ContactServices/CreateContactService";
@@ -20,8 +19,6 @@ import SimpleListService, {
 } from "../services/ContactServices/SimpleListService";
 import ContactCustomField from "../models/ContactCustomField";
 import { validateCPF, validateCNPJ } from "../utils/validateDocument";
-import Whatsapp from "../models/Whatsapp";
-import Contact from "../models/Contact";
 
 type IndexQuery = {
   searchParam: string;
@@ -123,11 +120,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       is: false,
       then: Yup.number().required('ERR_QUEUE_REQUIRED_WHEN_AUTOMATION_DISABLED')
     }),
-    whatsappId: Yup.number().nullable().test('whatsapp', 'ERR_WHATSAPP_NOT_FOUND', async function(value) {
-      if (!value) return true;
-      const whatsapp = await (Whatsapp as typeof Model).findByPk(value);
-      return !!whatsapp;
-    })
+    whatsappId: Yup.number().nullable()
   });
 
   try {

@@ -168,35 +168,6 @@ export const initIO = (httpServer: Server): SocketIO => {
       // O frontend pode usar este evento para atualizar a UI
       // e mostrar indicadores de encaminhamento
     });
-
-    socket.on("userStatus", async () => {
-      try {
-        const user = await User.findByPk(socket.user.id);
-        if (user) {
-          await user.update({
-            online: true,
-            lastActivity: new Date()
-          });
-        }
-      } catch (err) {
-        logger.error("Error updating user status:", err);
-      }
-    });
-
-    // Adiciona evento de heartbeat
-    socket.on("heartbeat", async () => {
-      try {
-        const user = await User.findByPk(socket.user.id);
-        if (user) {
-          await user.update({
-            lastActivity: new Date()
-          });
-        }
-      } catch (err) {
-        logger.error("Error updating user heartbeat:", err);
-      }
-    });
-
     socket.emit("ready");
   });
   return io;

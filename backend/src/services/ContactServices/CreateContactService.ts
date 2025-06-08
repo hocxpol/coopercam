@@ -1,8 +1,6 @@
 import AppError from "../../errors/AppError";
 import Contact from "../../models/Contact";
 import ContactCustomField from "../../models/ContactCustomField";
-import Whatsapp from "../../models/Whatsapp";
-import { Model } from "sequelize-typescript";
 
 interface ExtraInfo extends ContactCustomField {
   name: string;
@@ -23,7 +21,6 @@ interface Request {
   automation?: boolean;
   internalCode?: string;
   queueId?: number;
-  whatsappId?: number;
 }
 
 const CreateContactService = async ({
@@ -38,18 +35,9 @@ const CreateContactService = async ({
   gender,
   automation = true,
   internalCode,
-  queueId,
-  whatsappId
+  queueId
 }: Request): Promise<Contact> => {
-  // Validação do WhatsApp se fornecido
-  if (whatsappId) {
-    const whatsapp = await (Whatsapp as typeof Model).findByPk(whatsappId);
-    if (!whatsapp) {
-      throw new AppError("ERR_WHATSAPP_NOT_FOUND");
-    }
-  }
-
-  const numberExists = await (Contact as typeof Model).findOne({
+  const numberExists = await Contact.findOne({
     where: { number, companyId }
   });
 
@@ -57,7 +45,7 @@ const CreateContactService = async ({
     throw new AppError("ERR_DUPLICATED_CONTACT");
   }
 
-  const contact = await (Contact as typeof Model).create(
+  const contact = await Contact.create(
     {
       name,
       number,
@@ -70,8 +58,7 @@ const CreateContactService = async ({
       gender,
       automation,
       internalCode,
-      queueId,
-      whatsappId
+      queueId
     },
     {
       include: ["extraInfo"]
