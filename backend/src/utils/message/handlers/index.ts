@@ -246,8 +246,7 @@ export const verifyMessage = async (
   try {
     // Atualiza o ticket com a última mensagem
     await ticket.update({
-      lastMessage: body,
-      fromMe: msg.key.fromMe
+      lastMessage: body
     });
 
     // Cria ou atualiza a mensagem no banco

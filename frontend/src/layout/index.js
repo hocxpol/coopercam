@@ -189,7 +189,7 @@ const getDateAndDifDays = (date) => {
   return { difData: diff };
 };
 
-const LoggedInLayout = ({ children }) => {
+const LoggedInLayout = ({ children, themeToggle }) => {
   const classes = useStyles();
 	const history = useHistory();
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -201,8 +201,10 @@ const LoggedInLayout = ({ children }) => {
   const isMobile = useMediaQuery('(max-width:400px)');
   const [drawerVariant, setDrawerVariant] = useState(isMobile ? "temporary" : "permanent");
   const [currentTime, setCurrentTime] = useState(new Date());
+  // const [dueDate, setDueDate] = useState("");
   const { user } = useContext(AuthContext);
-  const { colorMode } = useContext(ColorModeContext);
+
+  const { colorMode, toggleColorMode } = useContext(ColorModeContext);
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
@@ -466,12 +468,8 @@ const LoggedInLayout = ({ children }) => {
             })()}
           </Typography>
 
-          <IconButton 
-            edge="start" 
-            onClick={colorMode.toggleColorMode}
-            style={{ color: "white" }}
-          >
-            {theme.palette.type === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          <IconButton edge="start" onClick={toggleColorMode}>
+            {theme.mode === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
           </IconButton>
 					{connectionWarning && (
 						<Tooltip title="Há conexões desconectadas">

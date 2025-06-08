@@ -78,21 +78,8 @@ const App = () => {
                 boxticket: mode === "light" ? "#EEE" : "#666",
                 campaigntab: mode === "light" ? "#ededed" : "#666",
                 mediainput: mode === "light" ? "#ededed" : "#1c1c1c",
-                background: {
-                    default: mode === "light" ? "#fafafa" : "#303030",
-                    paper: mode === "light" ? "#fff" : "#424242"
-                }
             },
-            overrides: {
-                MuiCssBaseline: {
-                    '@global': {
-                        body: {
-                            backgroundColor: mode === "light" ? "#fafafa" : "#303030",
-                            color: mode === "light" ? "rgba(0, 0, 0, 0.87)" : "#fff"
-                        }
-                    }
-                }
-            }
+            mode,
         },
         locale
     );
