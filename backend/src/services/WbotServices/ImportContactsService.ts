@@ -66,7 +66,8 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
           await CreateContactService({
             number,
             name: name || notify,
-            companyId
+            companyId,
+            whatsappId: defaultWhatsapp.id
           });
         } catch (error) {
           Sentry.captureException(error);

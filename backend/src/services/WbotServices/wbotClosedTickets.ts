@@ -76,13 +76,12 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         expiresTicket !== "0" && Number(expiresTicket) > 0) {
 
         //mensagem de encerramento por inatividade
-        const bodyExpiresMessageInactive = formatBody(`\u200e ${expiresInactiveMessage}`, showTicket.contact);
+        const bodyExpiresMessageInactive = formatBody(`\u200e${expiresInactiveMessage}`, showTicket.contact);
 
         const dataLimite = new Date()
         dataLimite.setMinutes(dataLimite.getMinutes() - Number(expiresTicket));
 
         if (showTicket.status === "open" && !showTicket.isGroup) {
-
           const dataUltimaInteracaoChamado = new Date(showTicket.updatedAt)
 
           if (dataUltimaInteracaoChamado < dataLimite && showTicket.fromMe) {
@@ -106,7 +105,6 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
               action: "delete",
               ticketId: showTicket.id
             });
-
           }
         }
       }

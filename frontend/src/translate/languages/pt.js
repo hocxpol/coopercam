@@ -119,6 +119,7 @@ const messages = {
 					actions: "Ações",
 					session: "Sessão",
 					number: "Número",
+					queues: "Filas",
 				},
 			},
 			whatsappModal: {

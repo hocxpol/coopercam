@@ -189,7 +189,7 @@ const getDateAndDifDays = (date) => {
   return { difData: diff };
 };
 
-const LoggedInLayout = ({ children, themeToggle }) => {
+const LoggedInLayout = ({ children }) => {
   const classes = useStyles();
 	const history = useHistory();
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -201,10 +201,8 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   const isMobile = useMediaQuery('(max-width:400px)');
   const [drawerVariant, setDrawerVariant] = useState(isMobile ? "temporary" : "permanent");
   const [currentTime, setCurrentTime] = useState(new Date());
-  // const [dueDate, setDueDate] = useState("");
   const { user } = useContext(AuthContext);
-
-  const { colorMode, toggleColorMode } = useContext(ColorModeContext);
+  const { colorMode } = useContext(ColorModeContext);
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
@@ -296,11 +294,17 @@ const LoggedInLayout = ({ children, themeToggle }) => {
     socket.emit("userStatus");
     const interval = setInterval(() => {
       socket.emit("userStatus");
-    }, 1000 * 60 * 5);
+    }, 1000 * 60);
+
+    // Adiciona heartbeat
+    const heartbeatInterval = setInterval(() => {
+      socket.emit("heartbeat");
+    }, 1000 * 30);
 
     return () => {
       socket.disconnect();
       clearInterval(interval);
+      clearInterval(heartbeatInterval);
     };
   }, [socketManager]);
 
@@ -462,8 +466,8 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             })()}
           </Typography>
 
-          <IconButton edge="start" onClick={toggleColorMode}>
-            {theme.mode === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
+          <IconButton edge="start" onClick={colorMode.toggleColorMode}>
+            {theme.palette.type === 'dark' ? <Brightness7Icon style={{ color: "white" }} /> : <Brightness4Icon style={{ color: "white" }} />}
           </IconButton>
 					{connectionWarning && (
 						<Tooltip title="Há conexões desconectadas">

@@ -1,6 +1,8 @@
 import AppError from "../../errors/AppError";
 import Contact from "../../models/Contact";
 import ContactCustomField from "../../models/ContactCustomField";
+import Whatsapp from "../../models/Whatsapp";
+import { Model } from "sequelize-typescript";
 
 interface ExtraInfo {
   id?: number;
@@ -20,11 +22,12 @@ interface ContactData {
   automation?: boolean;
   internalCode?: string;
   queueId?: number;
+  whatsappId?: number;
 }
 
 interface Request {
   contactData: ContactData;
-  contactId: string;
+  contactId: number;
   companyId: number;
 }
 
@@ -44,10 +47,18 @@ const UpdateContactService = async ({
     gender,
     automation,
     internalCode,
-    queueId
+    queueId,
+    whatsappId
   } = contactData;
 
-  const contact = await Contact.findOne({
+  if (whatsappId) {
+    const whatsapp = await (Whatsapp as typeof Model).findByPk(whatsappId);
+    if (!whatsapp) {
+      throw new AppError("ERR_WHATSAPP_NOT_FOUND");
+    }
+  }
+
+  const contact = await (Contact as typeof Model).findOne({
     where: { id: contactId },
     attributes: [
       "id", 
@@ -62,7 +73,8 @@ const UpdateContactService = async ({
       "gender",
       "automation",
       "internalCode",
-      "queueId"
+      "queueId",
+      "whatsappId"
     ],
     include: ["extraInfo"]
   });
@@ -78,7 +90,7 @@ const UpdateContactService = async ({
   if (extraInfo) {
     await Promise.all(
       extraInfo.map(async (info: any) => {
-        await ContactCustomField.upsert({ ...info, contactId: contact.id });
+        await (ContactCustomField as typeof Model).upsert({ ...info, contactId: contact.id });
       })
     );
 
@@ -87,7 +99,7 @@ const UpdateContactService = async ({
         const stillExists = extraInfo.findIndex(info => info.id === oldInfo.id);
 
         if (stillExists === -1) {
-          await ContactCustomField.destroy({ where: { id: oldInfo.id } });
+          await (ContactCustomField as typeof Model).destroy({ where: { id: oldInfo.id } });
         }
       })
     );
@@ -103,7 +115,8 @@ const UpdateContactService = async ({
     gender,
     automation,
     internalCode,
-    queueId
+    queueId,
+    whatsappId
   });
 
   await contact.reload({
@@ -119,7 +132,8 @@ const UpdateContactService = async ({
       "gender",
       "automation",
       "internalCode",
-      "queueId"
+      "queueId",
+      "whatsappId"
     ],
     include: ["extraInfo"]
   });

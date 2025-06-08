@@ -79,7 +79,6 @@ const App = () => {
                 campaigntab: mode === "light" ? "#ededed" : "#666",
                 mediainput: mode === "light" ? "#ededed" : "#1c1c1c",
             },
-            mode,
         },
         locale
     );

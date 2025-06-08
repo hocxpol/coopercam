@@ -217,6 +217,15 @@ Em validação:
 - Correções da dialog, e texto do vídeo nas mensagens rápidas.
 
 ---
+- Correção Dark mode
+- Fecha automaticamente a avaliação 3 mensagens ignoradas. / Rating Index
+- Evita mandar mensagem de fora do expediente quando está em avaliação.
+- Monitoramento do status dos usuários
+- Correção Update Origem / Contato / Importação
+- Exibir quantidade de filas em conexão
+- Remoção do espaço em inicio de frase de inatividade.
+
+---
 Correções a fazer.
 
 - Mensagem Editada
