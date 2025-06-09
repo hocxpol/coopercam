@@ -1,5 +1,6 @@
 import { isNil } from "lodash";
 import moment from "moment";
+import { logger } from "../../utils/logger";
 
 interface Schedule {
   inActivity?: boolean;
@@ -10,6 +11,7 @@ interface Schedule {
   }>;
 }
 
+// Mapeamento bidirecional para garantir consistência
 const weekdays = {
   monday: "Segunda-feira",
   tuesday: "Terça-feira",
@@ -18,7 +20,13 @@ const weekdays = {
   friday: "Sexta-feira",
   saturday: "Sábado",
   sunday: "Domingo"
-};
+} as const;
+
+// Mapeamento reverso para validação
+const weekdaysReverse = Object.entries(weekdays).reduce((acc, [en, pt]) => {
+  acc[pt.toLowerCase()] = en;
+  return acc;
+}, {} as Record<string, keyof typeof weekdays>);
 
 const formatTime = (time: string): string => {
   if (!time) return "";
@@ -29,18 +37,60 @@ const formatTime = (time: string): string => {
 };
 
 export const formatScheduleInfo = (schedules: any[]): string => {
-  if (!schedules || !Array.isArray(schedules)) return "";
+  if (!schedules || !Array.isArray(schedules)) {
+    return "";
+  }
 
-  return schedules
+  const formattedSchedules = schedules
     .map(schedule => {
-      // Converte o weekdayEn para o nome em português
-      const weekday = weekdays[schedule.weekdayEn as keyof typeof weekdays] || schedule.weekdayEn;
-      const startTime = formatTime(schedule.startTime);
-      const endTime = formatTime(schedule.endTime);
-      return `${weekday}: ${startTime} - ${endTime}`;
+      try {
+        // Validação do weekdayEn
+        if (!schedule.weekdayEn) {
+          logger.warn('Horário sem weekdayEn definido:', schedule);
+          return null;
+        }
+
+        const weekdayEn = schedule.weekdayEn.toLowerCase();
+        const weekday = weekdays[weekdayEn as keyof typeof weekdays];
+        
+        if (!weekday) {
+          logger.warn(`Dia da semana inválido: ${weekdayEn}`);
+          return null;
+        }
+
+        // Validação dos horários
+        const startTime = formatTime(schedule.startTime);
+        const endTime = formatTime(schedule.endTime);
+        
+        if (!startTime || !endTime) {
+          logger.warn(`Horários inválidos para ${weekday}:`, { startTime, endTime });
+          return null;
+        }
+
+        // Validação do formato dos horários
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+          logger.warn(`Formato de horário inválido para ${weekday}:`, { startTime, endTime });
+          return null;
+        }
+
+        return `${weekday}: ${startTime} - ${endTime}`;
+      } catch (error) {
+        logger.error('Erro ao formatar horário:', error);
+        return null;
+      }
     })
-    .filter(line => line && !line.includes("undefined")) // Remove linhas inválidas
-    .join("\n");
+    .filter((line): line is string => line !== null)
+    .sort((a, b) => {
+      // Ordena os dias da semana corretamente
+      const getDayOrder = (line: string) => {
+        const day = line.split(':')[0].toLowerCase();
+        return Object.values(weekdays).indexOf(day as any);
+      };
+      return getDayOrder(a) - getDayOrder(b);
+    });
+
+  return formattedSchedules.join("\n");
 };
 
 export const formatOutOfHoursMessage = (message: string | null, scheduleInfo: string): string | null => {
@@ -64,7 +114,7 @@ export const isOutOfHours = (schedule: Schedule | null): boolean => {
   if (!schedule.schedules || !Array.isArray(schedule.schedules)) return true;
   
   const currentSchedule = schedule.schedules.find(s => 
-    s.weekdayEn === weekday && 
+    s.weekdayEn.toLowerCase() === weekday && 
     s.startTime && 
     s.endTime
   );

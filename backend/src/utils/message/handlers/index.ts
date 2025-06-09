@@ -329,19 +329,7 @@ export const checkOutOfHours = async (
         const whatsapp = await Whatsapp.findByPk(ticket.whatsappId);
         const company = await Company.findByPk(ticket.companyId);
         
-        // Log para debug
-        logger.info('Company Schedule:', {
-          companyId: company.id,
-          schedules: company.schedules
-        });
-        
         const scheduleInfo = formatScheduleInfo(company.schedules);
-        
-        // Log para debug
-        logger.info('Formatted Schedule:', {
-          scheduleInfo,
-          rawSchedules: company.schedules
-        });
         
         // Mensagem padrão mais informativa para empresa
         const defaultMessage = "Olá! Estamos fora do horário de atendimento no momento. Nossa equipe retornará em breve para atendê-lo. Abaixo estão nossos horários de funcionamento:";
