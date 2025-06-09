@@ -47,18 +47,15 @@ export const formatScheduleInfo = (schedules: any[]): string => {
   const formattedSchedules = schedules
     .map(schedule => {
       // Converte o weekdayEn para o nome em português
-      const weekday = weekdays[schedule.weekdayEn?.toLowerCase() as keyof typeof weekdays] || schedule.weekdayEn;
+      const weekday = weekdays[schedule.weekdayEn?.toLowerCase() as keyof typeof weekdays];
       const startTime = formatTime(schedule.startTime);
       const endTime = formatTime(schedule.endTime);
       
-      // Se algum dos valores for undefined, retorna null para ser filtrado
-      if (!weekday || !startTime || !endTime) {
-        return null;
-      }
+      if (!weekday || !startTime || !endTime) return null;
       
       return `${weekday}: ${startTime} - ${endTime}`;
     })
-    .filter(line => line !== null); // Remove linhas inválidas
+    .filter(Boolean);
 
   return formattedSchedules.join("\n");
 };
