@@ -200,19 +200,24 @@ async function handleSendMessage(job) {
 
 async function handleCloseTicketsAutomatic() {
   const job = new CronJob('*/1 * * * *', async () => {
-    const companies = await Company.findAll();
-    companies.map(async c => {
-      try {
-        const companyId = c.id;
-        await ClosedAllOpenTickets(companyId);
-      } catch (e: any) {
-        Sentry.captureException(e);
-        logger.error("ClosedAllOpenTickets -> Verify: error", e.message);
-        throw e;
+    try {
+      const companies = await Company.findAll();
+      for (const company of companies) {
+        try {
+          const companyId = company.id;
+          await ClosedAllOpenTickets(companyId);
+        } catch (e: any) {
+          Sentry.captureException(e);
+          logger.error("ClosedAllOpenTickets -> Verify: error", e.message);
+        }
       }
-    });
+    } catch (e: any) {
+      Sentry.captureException(e);
+      logger.error("handleCloseTicketsAutomatic -> error", e.message);
+    }
   });
   job.start();
+  return job;
 }
 
 async function handleVerifySchedules(job) {
@@ -893,7 +898,7 @@ export async function startQueueProcess() {
   //queueMonitor.process("VerifyQueueStatus", handleVerifyQueue);
 
   // Inicia o job de fechamento automático de tickets
-  handleCloseTicketsAutomatic();
+  const closeTicketsJob = await handleCloseTicketsAutomatic();
 
   scheduleMonitor.add(
     "Verify",
