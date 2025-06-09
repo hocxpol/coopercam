@@ -178,6 +178,23 @@ const UpdateTicketService = async ({
       ticketTraking.whatsappId = ticket.whatsappId;
       ticketTraking.userId = ticket.userId;
 
+      // Emite eventos para atualizar a interface
+      io.to(`company-${ticket.companyId}-open`)
+        .to(`queue-${ticket.queueId}-open`)
+        .to(ticketId.toString())
+        .emit(`company-${ticket.companyId}-ticket`, {
+          action: "delete",
+          ticketId: ticket.id
+        });
+
+      io.to(`company-${ticket.companyId}-closed`)
+        .to(`queue-${ticket.queueId}-closed`)
+        .emit(`company-${ticket.companyId}-ticket`, {
+          action: "update",
+          ticket,
+          ticketId: ticket.id
+        });
+
       /*    queueId = null;
             userId = null; */
     }

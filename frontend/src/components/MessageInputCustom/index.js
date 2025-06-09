@@ -787,13 +787,14 @@ const MessageInputCustom = (props) => {
     setInputMessage("");
   };
 
-  const handleUploadMedia = async (e) => {
+  const handleUploadMedia = async e => {
+    if (ticketStatus !== "open") return;
     setLoading(true);
     e.preventDefault();
 
     const formData = new FormData();
     formData.append("fromMe", true);
-    medias.forEach((media) => {
+    medias.forEach(media => {
       formData.append("medias", media);
       formData.append("body", media.name);
     });
@@ -809,7 +810,7 @@ const MessageInputCustom = (props) => {
   };
 
   const handleSendMessage = async () => {
-    if (inputMessage.trim() === "") return;
+    if (inputMessage.trim() === "" || ticketStatus !== "open") return;
     setLoading(true);
 
     const message = {
@@ -847,6 +848,7 @@ const MessageInputCustom = (props) => {
   };
 
   const handleUploadAudio = async () => {
+    if (ticketStatus !== "open") return;
     setLoading(true);
     try {
       const [, blob] = await Mp3Recorder.stop().getMp3();
