@@ -574,25 +574,22 @@ export const handleMessage = async (
         }
       });
 
-      // Verifica se o sistema de horário de expediente está desabilitado
-      if (!scheduleType || scheduleType.value === "disabled") {
-        return;
-      } else {
+      if (scheduleType && scheduleType.value !== "disabled") {
         const currentSchedule = await VerifyCurrentSchedule(companyId);
         const { isOutOfHours, message } = await checkOutOfHours(ticket, scheduleType, currentSchedule);
         
         if (isOutOfHours && message) {
-          // Atualiza o status do ticket para pending
-          await ticket.update({
-            status: "pending"
-          });
-
-          // Salva a mensagem do usuário
+          // Salva a mensagem do usuário primeiro
           if (hasMedia) {
             mediaSent = await verifyMediaMessage(msg, ticket, contact);
           } else {
             await verifyMessage(msg, ticket, contact);
           }
+
+          // Atualiza o status do ticket para pending
+          await ticket.update({
+            status: "pending"
+          });
 
           // Envia a mensagem de fora do expediente
           await sendOutOfHoursMessage(wbot, ticket, message);

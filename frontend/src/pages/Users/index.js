@@ -250,6 +250,9 @@ const Users = () => {
                 {i18n.t("users.table.profile")}
               </TableCell>
               <TableCell align="center">
+                {i18n.t("users.table.queues")}
+              </TableCell>
+              <TableCell align="center">
                 {i18n.t("users.table.actions")}
               </TableCell>
             </TableRow>
@@ -262,6 +265,9 @@ const Users = () => {
                   <TableCell align="center">{user.name}</TableCell>
                   <TableCell align="center">{user.email}</TableCell>
                   <TableCell align="center">{user.profile}</TableCell>
+                  <TableCell align="center">
+                    {user.allTicket === "enabled" ? "Todas" : user.queues?.length || 0}
+                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -282,7 +288,7 @@ const Users = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {loading && <TableRowSkeleton columns={5} />}
+              {loading && <TableRowSkeleton columns={6} />}
             </>
           </TableBody>
         </Table>

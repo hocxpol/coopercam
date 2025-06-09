@@ -107,12 +107,6 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
               ticketId: showTicket.id
             });
 
-            // Adiciona evento para atualizar a lista de tickets fechados
-            io.to("closed").emit(`company-${companyId}-ticket`, {
-              action: "update",
-              ticket: showTicket,
-              ticketId: showTicket.id
-            });
           }
         }
       }

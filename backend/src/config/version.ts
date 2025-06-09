@@ -5,5 +5,5 @@ declare const process: {
 };
 
 export default {
-    version: process.env.APP_VERSION || "2025.06.08 - 1.398"
+    version: process.env.APP_VERSION || "2025.06.08 - 1.39"
 }; 
