@@ -3,12 +3,10 @@ import moment from "moment";
 import { logger } from "../../utils/logger";
 
 interface Schedule {
+  weekdayEn: string;
+  startTime: string;
+  endTime: string;
   inActivity?: boolean;
-  schedules?: Array<{
-    weekdayEn: string;
-    startTime: string;
-    endTime: string;
-  }>;
 }
 
 // Mapeamento bidirecional para garantir consistência
@@ -39,7 +37,7 @@ const formatTime = (time: string): string => {
   return digits.length === 4 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : time;
 };
 
-export const formatScheduleInfo = (schedules: any[]): string => {
+export const formatScheduleInfo = (schedules: Schedule[]): string => {
   if (!schedules || !Array.isArray(schedules)) {
     return "";
   }
@@ -77,20 +75,14 @@ export const isOutOfHours = (schedule: Schedule | null): boolean => {
   const now = moment();
   const weekday = now.format("dddd").toLowerCase();
   
-  // Se não tiver horário configurado para o dia atual, considera fora do expediente
-  if (!schedule.schedules || !Array.isArray(schedule.schedules)) return true;
+  // Se não tiver horário configurado, considera fora do expediente
+  if (!schedule.weekdayEn || !schedule.startTime || !schedule.endTime) return true;
   
-  const currentSchedule = schedule.schedules.find(s => 
-    s.weekdayEn.toLowerCase() === weekday && 
-    s.startTime && 
-    s.endTime
-  );
+  // Se não for o dia atual, considera fora do expediente
+  if (schedule.weekdayEn.toLowerCase() !== weekday) return true;
   
-  // Se não tiver horário configurado para o dia atual, considera fora do expediente
-  if (!currentSchedule) return true;
-  
-  const startTime = moment(currentSchedule.startTime, "HH:mm");
-  const endTime = moment(currentSchedule.endTime, "HH:mm");
+  const startTime = moment(schedule.startTime, "HH:mm");
+  const endTime = moment(schedule.endTime, "HH:mm");
   
   // Retorna true se estiver antes do horário de início ou depois do horário de fim
   return now.isBefore(startTime) || now.isAfter(endTime);
