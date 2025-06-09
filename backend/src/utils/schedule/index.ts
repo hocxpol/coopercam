@@ -43,17 +43,23 @@ export const formatScheduleInfo = (schedules: any[]): string => {
 
 export const formatOutOfHoursMessage = (message: string | null, scheduleInfo: string): string | null => {
   if (!message) return null;
-  return `${message}\n\n*Horários de Funcionamento:*\n\n${scheduleInfo}`;
+  
+  // Se não houver horários configurados, retorna apenas a mensagem
+  if (!scheduleInfo || scheduleInfo.trim() === "") {
+    return message;
+  }
+  
+  return `${message}\n\n*Horários de Funcionamento:*\n${scheduleInfo}`;
 };
 
 export const isOutOfHours = (schedule: Schedule | null): boolean => {
-  if (isNil(schedule)) return false;
+  if (isNil(schedule)) return true;
   
   const now = moment();
   const weekday = now.format("dddd").toLowerCase();
   
-  // Se não tiver horário configurado para o dia atual
-  if (!schedule.schedules || !Array.isArray(schedule.schedules)) return false;
+  // Se não tiver horário configurado para o dia atual, considera fora do expediente
+  if (!schedule.schedules || !Array.isArray(schedule.schedules)) return true;
   
   const currentSchedule = schedule.schedules.find(s => 
     s.weekdayEn === weekday && 
@@ -61,7 +67,8 @@ export const isOutOfHours = (schedule: Schedule | null): boolean => {
     s.endTime
   );
   
-  if (!currentSchedule) return false;
+  // Se não tiver horário configurado para o dia atual, considera fora do expediente
+  if (!currentSchedule) return true;
   
   const startTime = moment(currentSchedule.startTime, "HH:mm");
   const endTime = moment(currentSchedule.endTime, "HH:mm");

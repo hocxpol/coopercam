@@ -220,7 +220,6 @@ const TicketsListCustom = (props) => {
     });
 
     socket.on(`company-${companyId}-ticket`, (data) => {
-      
       if (data.action === "updateUnread") {
         dispatch({
           type: "RESET_UNREAD",
@@ -228,11 +227,15 @@ const TicketsListCustom = (props) => {
         });
       }
 
-      if (data.action === "update" && shouldUpdateTicket(data.ticket) && data.ticket.status === status) {
-        dispatch({
-          type: "UPDATE_TICKET",
-          payload: data.ticket,
-        });
+      if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
+        if (status !== undefined && data.ticket.status !== status) {
+          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+        } else {
+          dispatch({
+            type: "UPDATE_TICKET",
+            payload: data.ticket,
+          });
+        }
       }
 
       if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
@@ -254,11 +257,13 @@ const TicketsListCustom = (props) => {
         return;
       }
 
-      if (data.action === "create" && shouldUpdateTicket(data.ticket) && ( status === undefined || data.ticket.status === status)) {
-        dispatch({
-          type: "UPDATE_TICKET_UNREAD_MESSAGES",
-          payload: data.ticket,
-        });
+      if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
+        if (status === undefined || data.ticket.status === status) {
+          dispatch({
+            type: "UPDATE_TICKET_UNREAD_MESSAGES",
+            payload: data.ticket,
+          });
+        }
       }
     });
 
@@ -268,6 +273,19 @@ const TicketsListCustom = (props) => {
           type: "UPDATE_TICKET_CONTACT",
           payload: data.contact,
         });
+      }
+    });
+
+    socket.on(`company-${companyId}-ticket:status`, (data) => {
+      if (shouldUpdateTicket(data.ticket)) {
+        if (status !== undefined && data.ticket.status !== status) {
+          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+        } else {
+          dispatch({
+            type: "UPDATE_TICKET",
+            payload: data.ticket,
+          });
+        }
       }
     });
 

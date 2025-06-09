@@ -279,10 +279,14 @@ const TicketsList = (props) => {
 			}
 
 			if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
-				dispatch({
-					type: "UPDATE_TICKET",
-					payload: data.ticket,
-				});
+				if (status !== undefined && data.ticket.status !== status) {
+					dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+				} else {
+					dispatch({
+						type: "UPDATE_TICKET",
+						payload: data.ticket,
+					});
+				}
 			}
 
 			if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
@@ -296,10 +300,12 @@ const TicketsList = (props) => {
 
 		socket.on("appMessage", (data) => {
 			if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
-				dispatch({
-					type: "UPDATE_TICKET_UNREAD_MESSAGES",
-					payload: data.ticket,
-				});
+				if (status === undefined || data.ticket.status === status) {
+					dispatch({
+						type: "UPDATE_TICKET_UNREAD_MESSAGES",
+						payload: data.ticket,
+					});
+				}
 			}
 		});
 
@@ -309,6 +315,19 @@ const TicketsList = (props) => {
 					type: "UPDATE_TICKET_CONTACT",
 					payload: data.contact,
 				});
+			}
+		});
+
+		socket.on("ticket:status", (data) => {
+			if (shouldUpdateTicket(data.ticket)) {
+				if (status !== undefined && data.ticket.status !== status) {
+					dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+				} else {
+					dispatch({
+						type: "UPDATE_TICKET",
+						payload: data.ticket,
+					});
+				}
 			}
 		});
 

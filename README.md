@@ -223,6 +223,7 @@ Em validação:
 - Fechamento automático e correto do ticket.
 - Evitar enviar mensagem quando o ticket está fechado.
 - Expediente, correção para filas e empresa.
+- Status dos tickets.
 
 - Fecha automaticamente a avaliação 3 mensagens ignoradas. / Rating Index
 - Evita mandar mensagem de fora do expediente quando está em avaliação.

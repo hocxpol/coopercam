@@ -80,8 +80,12 @@ const sendOutOfHoursMessage = async (
           `${message.number}@${message.isGroup ? "g.us" : "s.whatsapp.net"}`,
           { text: message.body }
         );
+        
+        // Aguarda um pequeno intervalo entre as mensagens para evitar bloqueio
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         Sentry.captureException(error);
+        logger.error(`Error sending out of hours message: ${error}`);
       }
     }
 
@@ -89,6 +93,8 @@ const sendOutOfHoursMessage = async (
     processingQueue.delete(ticket.id);
   } catch (error) {
     processingQueue.delete(ticket.id);
+    Sentry.captureException(error);
+    logger.error(`Error in sendOutOfHoursMessage: ${error}`);
   }
 };
 
@@ -323,7 +329,11 @@ export const checkOutOfHours = async (
         const whatsapp = await Whatsapp.findByPk(ticket.whatsappId);
         const company = await Company.findByPk(ticket.companyId);
         const scheduleInfo = formatScheduleInfo(company.schedules);
-        const message = whatsapp?.outOfHoursMessage || "Estamos fora do horário de atendimento. Retornaremos em breve.";
+        
+        // Mensagem padrão mais informativa para empresa
+        const defaultMessage = "Olá! Estamos fora do horário de atendimento no momento. Nossa equipe retornará em breve para atendê-lo. Abaixo estão nossos horários de funcionamento:";
+        
+        const message = whatsapp?.outOfHoursMessage || defaultMessage;
         return { 
           isOutOfHours: true, 
           message: formatOutOfHoursMessage(message, scheduleInfo)
@@ -357,7 +367,11 @@ export const checkOutOfHours = async (
 
         if (now.isBefore(startTime) || now.isAfter(endTime)) {
           const scheduleInfo = formatScheduleInfo(schedules);
-          const message = queue.outOfHoursMessage || "Esta fila está fora do horário de atendimento. Retornaremos em breve.";
+          
+          // Mensagem padrão mais informativa para fila
+          const defaultMessage = `Olá! A fila *${queue.name}* está fora do horário de atendimento no momento. Nossa equipe retornará em breve para atendê-lo. Abaixo estão os horários de funcionamento desta fila:`;
+          
+          const message = queue.outOfHoursMessage || defaultMessage;
           return { 
             isOutOfHours: true, 
             message: formatOutOfHoursMessage(message, scheduleInfo)
