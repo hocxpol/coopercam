@@ -8,8 +8,8 @@ import moment from "moment";
 import ShowTicketService from "../TicketServices/ShowTicketService";
 import { verifyMessage } from "../../utils/message/handlers";
 import TicketTraking from "../../models/TicketTraking";
-import logger from "../../utils/logger";
-import Sentry from "../../utils/sentry";
+import { logger } from "../../utils/logger";
+import * as Sentry from "@sentry/node";
 
 
 export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => {

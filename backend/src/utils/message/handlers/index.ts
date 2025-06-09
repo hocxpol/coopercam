@@ -15,7 +15,7 @@ import FindOrCreateTicketService from "../../../services/TicketServices/FindOrCr
 import { provider } from "../../../services/WbotServices/providers";
 import { verifyQueue } from "../../queue";
 import FindOrCreateATicketTrakingService from "../../../services/TicketServices/FindOrCreateATicketTrakingService";
-import { verifyRating, handleRating } from "../../rating";
+import { verifyRating, handleRating, checkMessagesWithoutRating } from "../../rating";
 import { verifyMediaMessage } from "../../media";
 import VerifyCurrentSchedule from "../../../services/CompanyService/VerifyCurrentSchedule";
 import { debounce } from "../../../helpers/Debounce";
