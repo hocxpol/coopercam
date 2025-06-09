@@ -53,8 +53,7 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         const whatsapp = await Whatsapp.findByPk(showTicket?.whatsappId);
         const ticketTraking = await TicketTraking.findOne({
           where: {
-            ticketId: ticket.id,
-            finishedAt: null,
+            ticketId: ticket.id
           }
         });
 
@@ -76,28 +75,39 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
         dataLimite.setMinutes(dataLimite.getMinutes() + Number(expiresTicket));
 
         if (new Date() > dataLimite) {
-          await closeTicket(showTicket, showTicket.status, bodyExpiresMessageInactive);
+          if (!ticketTraking?.finishedAt) {
+            await closeTicket(showTicket, showTicket.status, bodyExpiresMessageInactive);
 
-          if (expiresInactiveMessage && expiresInactiveMessage !== "") {
-            const sentMessage = await SendWhatsAppMessage({ body: bodyExpiresMessageInactive, ticket: showTicket });
-            await verifyMessage(sentMessage, showTicket, showTicket.contact);
-          }
+            if (expiresInactiveMessage && expiresInactiveMessage !== "") {
+              const sentMessage = await SendWhatsAppMessage({ body: bodyExpiresMessageInactive, ticket: showTicket });
+              await verifyMessage(sentMessage, showTicket, showTicket.contact);
+            }
 
-          if (ticketTraking) {
-            await ticketTraking.update({
-              finishedAt: moment().toDate(),
-              closedAt: moment().toDate(),
-              whatsappId: ticket.whatsappId,
-              userId: ticket.userId,
+            if (ticketTraking) {
+              await ticketTraking.update({
+                finishedAt: moment().toDate(),
+                closedAt: moment().toDate(),
+                whatsappId: ticket.whatsappId,
+                userId: ticket.userId,
+              });
+            } else {
+              await TicketTraking.create({
+                ticketId: ticket.id,
+                finishedAt: moment().toDate(),
+                closedAt: moment().toDate(),
+                whatsappId: ticket.whatsappId,
+                userId: ticket.userId,
+                companyId: companyId
+              });
+            }
+
+            io.to("open").emit(`company-${companyId}-ticket`, {
+              action: "delete",
+              ticketId: showTicket.id
             });
+
+            logger.info(`Ticket ${showTicket.id} fechado automaticamente por inatividade`);
           }
-
-          io.to("open").emit(`company-${companyId}-ticket`, {
-            action: "delete",
-            ticketId: showTicket.id
-          });
-
-          logger.info(`Ticket ${showTicket.id} fechado automaticamente por inatividade`);
         }
       } catch (err) {
         logger.error(`Erro ao processar ticket ${ticket.id}: ${err.message}`);
