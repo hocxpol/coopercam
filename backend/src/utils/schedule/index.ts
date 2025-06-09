@@ -22,11 +22,14 @@ const weekdays = {
   sunday: "Domingo"
 } as const;
 
+type WeekdayKey = keyof typeof weekdays;
+type WeekdayValue = typeof weekdays[WeekdayKey];
+
 // Mapeamento reverso para validação
 const weekdaysReverse = Object.entries(weekdays).reduce((acc, [en, pt]) => {
-  acc[pt.toLowerCase()] = en;
+  acc[pt.toLowerCase()] = en as WeekdayKey;
   return acc;
-}, {} as Record<string, keyof typeof weekdays>);
+}, {} as Record<string, WeekdayKey>);
 
 const formatTime = (time: string): string => {
   if (!time) return "";
