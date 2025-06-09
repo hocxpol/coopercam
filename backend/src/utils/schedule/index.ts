@@ -1,10 +1,13 @@
 import { isNil } from "lodash";
+import moment from "moment";
 
 interface Schedule {
-  weekdayEn: string;
-  startTime: string;
-  endTime: string;
   inActivity?: boolean;
+  schedules?: Array<{
+    weekdayEn: string;
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 const weekdays = {
@@ -25,21 +28,17 @@ const formatTime = (time: string): string => {
   return digits.length === 4 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : time;
 };
 
-export const formatScheduleInfo = (schedules: Schedule[]): string => {
-  if (!Array.isArray(schedules) || schedules.length === 0) {
-    return "";
-  }
+export const formatScheduleInfo = (schedules: any[]): string => {
+  if (!schedules || !Array.isArray(schedules)) return "";
 
-  const scheduleLines = schedules
-    .filter(s => s.startTime && s.endTime)
-    .map(s => {
-      const weekday = weekdays[s.weekdayEn as keyof typeof weekdays] || s.weekdayEn;
-      const startTime = formatTime(s.startTime);
-      const endTime = formatTime(s.endTime);
+  return schedules
+    .map(schedule => {
+      const weekday = weekdays[schedule.weekdayEn as keyof typeof weekdays] || schedule.weekdayEn;
+      const startTime = formatTime(schedule.startTime);
+      const endTime = formatTime(schedule.endTime);
       return `${weekday}: ${startTime} - ${endTime}`;
-    });
-
-  return scheduleLines.join("\n");
+    })
+    .join("\n");
 };
 
 export const formatOutOfHoursMessage = (message: string | null, scheduleInfo: string): string | null => {
@@ -49,5 +48,24 @@ export const formatOutOfHoursMessage = (message: string | null, scheduleInfo: st
 
 export const isOutOfHours = (schedule: Schedule | null): boolean => {
   if (isNil(schedule)) return false;
-  return !schedule || schedule.inActivity === false;
+  
+  const now = moment();
+  const weekday = now.format("dddd").toLowerCase();
+  
+  // Se não tiver horário configurado para o dia atual
+  if (!schedule.schedules || !Array.isArray(schedule.schedules)) return false;
+  
+  const currentSchedule = schedule.schedules.find(s => 
+    s.weekdayEn === weekday && 
+    s.startTime && 
+    s.endTime
+  );
+  
+  if (!currentSchedule) return false;
+  
+  const startTime = moment(currentSchedule.startTime, "HH:mm");
+  const endTime = moment(currentSchedule.endTime, "HH:mm");
+  
+  // Retorna true se estiver antes do horário de início ou depois do horário de fim
+  return now.isBefore(startTime) || now.isAfter(endTime);
 }; 
