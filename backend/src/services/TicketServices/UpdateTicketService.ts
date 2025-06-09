@@ -20,6 +20,7 @@ import { Op } from "sequelize";
 import AppError from "../../errors/AppError";
 import VerifyCurrentSchedule from "../CompanyService/VerifyCurrentSchedule";
 import { checkOutOfHours } from "../../utils/message/handlers";
+import TicketTraking from "../../models/TicketTraking";
 
 interface TicketData {
   status?: string;
@@ -123,63 +124,76 @@ const UpdateTicketService = async ({
           companyId
         );
 
-        if (setting?.value === "enabled" && ticket.contact.automation) {
-          if (ticketTraking.ratingAt == null) {
-            const ratingTxt = ratingMessage || "";
-            if (ratingTxt) {
-              let bodyRatingMessage = `\u200e${ratingTxt}\n\n`;
-              bodyRatingMessage +=
-                "Por favor, avalie nosso serviço respondendo com uma nota de *1 a 3*, onde:\n\n🙁 *1* - _Insatisfeito_\n😊 *2* - _Satisfeito_\n🌟 *3* - _Muito Satisfeito_\n\nSua opinião é muito importante para continuarmos melhorando! 🙌\n\nAguardamos sua resposta. Grato! 💛";
-              await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
-            } else {
-              let bodyRatingMessage = "Por favor, avalie nosso serviço respondendo com uma nota de *1 a 3*, onde:\n🙁 *1* - _Insatisfeito_\n😊 *2* - _Satisfeito_\n🌟 *3* - _Muito Satisfeito_\n\nSua opinião é muito importante para continuarmos melhorando! 🙌\n\nAguardamos sua resposta. Grato! 💛";
-              await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
+        // Verifica se o ticket já foi fechado por inatividade
+        const ticketTraking = await TicketTraking.findOne({
+          where: {
+            ticketId: ticket.id,
+            finishedAt: {
+              [Op.not]: null
             }
-            await ticketTraking.update({
-              ratingAt: moment().toDate()
-            });
+          }
+        });
 
-            io.to(`company-${ticket.companyId}-open`)
-              .to(`queue-${ticket.queueId}-open`)
-              .to(ticketId.toString())
-              .emit(`company-${ticket.companyId}-ticket`, {
-                action: "delete",
-                ticketId: ticket.id
+        // Só envia mensagem de encerramento se não for fechamento por inatividade
+        if (!ticketTraking || !ticketTraking.finishedAt) {
+          if (setting?.value === "enabled" && ticket.contact.automation) {
+            if (ticketTraking.ratingAt == null) {
+              const ratingTxt = ratingMessage || "";
+              if (ratingTxt) {
+                let bodyRatingMessage = `\u200e${ratingTxt}\n\n`;
+                bodyRatingMessage +=
+                  "Por favor, avalie nosso serviço respondendo com uma nota de *1 a 3*, onde:\n\n🙁 *1* - _Insatisfeito_\n😊 *2* - _Satisfeito_\n🌟 *3* - _Muito Satisfeito_\n\nSua opinião é muito importante para continuarmos melhorando! 🙌\n\nAguardamos sua resposta. Grato! 💛";
+                await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
+              } else {
+                let bodyRatingMessage = "Por favor, avalie nosso serviço respondendo com uma nota de *1 a 3*, onde:\n🙁 *1* - _Insatisfeito_\n😊 *2* - _Satisfeito_\n🌟 *3* - _Muito Satisfeito_\n\nSua opinião é muito importante para continuarmos melhorando! 🙌\n\nAguardamos sua resposta. Grato! 💛";
+                await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
+              }
+              await ticketTraking.update({
+                ratingAt: moment().toDate()
               });
 
-            return { ticket, oldStatus, oldUserId };
+              io.to(`company-${ticket.companyId}-open`)
+                .to(`queue-${ticket.queueId}-open`)
+                .to(ticketId.toString())
+                .emit(`company-${ticket.companyId}-ticket`, {
+                  action: "delete",
+                  ticketId: ticket.id
+                });
+
+              return { ticket, oldStatus, oldUserId };
+            }
+            ticketTraking.ratingAt = moment().toDate();
+            ticketTraking.rated = false;
           }
-          ticketTraking.ratingAt = moment().toDate();
-          ticketTraking.rated = false;
+
+          if (!isNil(complationMessage) && complationMessage !== "") {
+            const body = `\u200e${complationMessage}`;
+            await SendWhatsAppMessage({ body, ticket });
+          }
         }
 
-        if (!isNil(complationMessage) && complationMessage !== "") {
-          const body = `\u200e${complationMessage}`;
-          await SendWhatsAppMessage({ body, ticket });
-        }
+        // Limpa todas as configurações do ticket ao fechar
+        await ticket.update({
+          status: "closed",
+          queueId: null,
+          chatbot: null,
+          queueOptionId: null,
+          userId: null,
+          useIntegration: false,
+          promptId: null,
+          integrationId: null,
+          typebotStatus: false,
+          typebotSessionId: null,
+          isBot: false
+        });
+
+        ticketTraking.finishedAt = moment().toDate();
+        ticketTraking.whatsappId = ticket.whatsappId;
+        ticketTraking.userId = ticket.userId;
+
+        /*    queueId = null;
+                userId = null; */
       }
-
-      // Limpa todas as configurações do ticket ao fechar
-      await ticket.update({
-        status: "closed",
-        queueId: null,
-        chatbot: null,
-        queueOptionId: null,
-        userId: null,
-        useIntegration: false,
-        promptId: null,
-        integrationId: null,
-        typebotStatus: false,
-        typebotSessionId: null,
-        isBot: false
-      });
-
-      ticketTraking.finishedAt = moment().toDate();
-      ticketTraking.whatsappId = ticket.whatsappId;
-      ticketTraking.userId = ticket.userId;
-
-      /*    queueId = null;
-            userId = null; */
     }
 
     if (queueId !== undefined && queueId !== null) {
