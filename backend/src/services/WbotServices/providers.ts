@@ -15,19 +15,6 @@ import axios from 'axios';
 import UpdateTicketService from "../TicketServices/UpdateTicketService";
 import fs from 'fs';
 
-const sendFinalizationMessage = async (ticket: Ticket, contact: Contact, wbot: WASocket) => {
-  const bodyfinaliza = {
-    text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
-  };
-  await sleep(2000)
-  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
-  await UpdateTicketService({
-    ticketData: { status: "closed" },
-    ticketId: ticket.id,
-    companyId: ticket.companyId,
-  });
-};
-
 export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, companyId: number, contact: Contact, wbot: WASocket) => {
   const filaescolhida = ticket.queue?.name
   if (filaescolhida === "2ª Via de Boleto" || filaescolhida === "2 Via de Boleto") {
@@ -244,18 +231,27 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             await sleep(2000)
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyqrcode);
                           }).catch(async function (error) {
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = { text: formatBody(`Opss! Algo de errado aconteceu! Digite *#* para voltar ao menu anterior e fale com um atendente!`, contact) };
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
                           });
                         }
 
 
-                        await sendFinalizationMessage(ticket, contact, wbot);
+                        const bodyfinaliza = { text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact) };
+                        await sleep(12000)
+                        await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
 
                         await sleep(2000)
                         fs.unlink(nomePDF, function (err) {
                           if (err) throw err;
                           console.log(err);
                         })
+
+                        await UpdateTicketService({
+                          ticketData: { status: "closed" },
+                          ticketId: ticket.id,
+                          companyId: ticket.companyId,
+                        });
 
                       } catch (error) {
                         console.log('11 Não consegui enviar a mensagem!')
@@ -274,7 +270,8 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                   });
               })
               .catch(async function (error) {
-                await sendFinalizationMessage(ticket, contact, wbot);
+                const bodyfinaliza = { text: formatBody(`Opss! Algo de errado aconteceu! Digite *#* para voltar ao menu anterior e fale com um atendente!`, contact) };
+                await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
               });
           } else {
             const body = { text: formatBody(`Este CPF/CNPJ não é válido!\n\nPor favor tente novamente!\nOu digite *#* para voltar ao *Menu Anterior*`, contact) };
@@ -445,13 +442,41 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                               await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodycodigo);
                               await sleep(2000)
                               await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodycodigoBarras);
-                              await sendFinalizationMessage(ticket, contact, wbot);
+                              const bodyfinaliza = {
+                                text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                              };
+                              await sleep(2000)
+                              await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                              await sleep(2000)
+                              await UpdateTicketService({
+                                ticketData: { status: "closed" },
+                                ticketId: ticket.id,
+                                companyId: ticket.companyId,
+                              });
                             } else {
-                              await sendFinalizationMessage(ticket, contact, wbot);
+                              const bodyfinaliza = {
+                                text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                              };
+                              await sleep(2000)
+                              await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                              await UpdateTicketService({
+                                ticketData: { status: "closed" },
+                                ticketId: ticket.id,
+                                companyId: ticket.companyId,
+                              });
                             }
 
                           }).catch(async function (error) {
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = {
+                              text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                            };
+                            await sleep(2000)
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                            await UpdateTicketService({
+                              ticketData: { status: "closed" },
+                              ticketId: ticket.id,
+                              companyId: ticket.companyId,
+                            });
                           });
                         }
 
@@ -556,9 +581,27 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodycodigo);
                             await sleep(2000)
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodycodigoBarras);
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = {
+                              text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                            };
+                            await sleep(2000)
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                            await UpdateTicketService({
+                              ticketData: { status: "closed" },
+                              ticketId: ticket.id,
+                              companyId: ticket.companyId,
+                            });
                           } else {
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = {
+                              text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                            };
+                            await sleep(2000)
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                            await UpdateTicketService({
+                              ticketData: { status: "closed" },
+                              ticketId: ticket.id,
+                              companyId: ticket.companyId,
+                            });
                           }
 
                         }).catch(function (error) {
@@ -862,10 +905,10 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                               axios.request(optionsRadius as any).then(async function (response) {
                                 let tipo;
                                 tipo = response.data?.type;
-                                const body_mensagem = {
-                                  text: formatBody(`${mensagem}`, contact),
-                                };
                                 if (tipo === 'success') {
+                                  const body_mensagem = {
+                                    text: formatBody(`${mensagem}`, contact),
+                                  };
                                   await sleep(2000)
                                   await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body_mensagem);
                                   const bodyPdf = {
@@ -873,21 +916,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                                   };
                                   await sleep(2000)
                                   await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyPdf);
-                                  await sendFinalizationMessage(ticket, contact, wbot);
-                                } else {
-                                  await sleep(2000)
-                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body_mensagem);
-                                  const bodyPdf = {
-                                    text: formatBody(`Vou precisar que você *retire* seu equipamento da tomada.\n\n*OBS: Somente retire da tomada.* \nAguarde 1 minuto e ligue novamente!`, contact),
+                                  const bodyfinaliza = {
+                                    text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
                                   };
                                   await sleep(2000)
-                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyPdf);
-                                  const bodyqrcode = {
-                                    text: formatBody(`Veja se seu acesso voltou! Caso não tenha voltado retorne o contato e fale com um atendente!`, contact),
-                                  };
-                                  await sleep(2000)
-                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyqrcode);
-                                  await sendFinalizationMessage(ticket, contact, wbot);
+                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                                  await UpdateTicketService({
+                                    ticketData: { status: "closed" },
+                                    ticketId: ticket.id,
+                                    companyId: ticket.companyId,
+                                  });
                                 }
                               }).catch(function (error) {
                                 console.error(error);
@@ -920,12 +958,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyerro);
                           });
                         } else {
-                          const bodysembloqueio = {
-                            text: formatBody(`Sua Conexão não está bloqueada! Caso esteja com dificuldades de navegação, retorne o contato e fale com um atendente!`, contact),
+                          const bodyfinaliza = {
+                            text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
                           };
-                          await sleep(2000)
-                          await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodysembloqueio);
-                          await sendFinalizationMessage(ticket, contact, wbot);
+                          await sleep(8000)
+                          await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                          await UpdateTicketService({
+                            ticketData: { status: "closed" },
+                            ticketId: ticket.id,
+                            companyId: ticket.companyId,
+                          });
                         }
 
                         //
@@ -1037,7 +1079,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                                   };
                                   await sleep(2000)
                                   await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyPdf);
-                                  await sendFinalizationMessage(ticket, contact, wbot);
+                                  const bodyfinaliza = {
+                                    text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                                  };
+                                  await sleep(2000)
+                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                                  await UpdateTicketService({
+                                    ticketData: { status: "closed" },
+                                    ticketId: ticket.id,
+                                    companyId: ticket.companyId,
+                                  });
                                 } else {
                                   await sleep(2000)
                                   await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body_mensagem);
@@ -1051,7 +1102,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                                   };
                                   await sleep(2000)
                                   await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyqrcode);
-                                  await sendFinalizationMessage(ticket, contact, wbot);
+                                  const bodyfinaliza = {
+                                    text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                                  };
+                                  await sleep(2000)
+                                  await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                                  await UpdateTicketService({
+                                    ticketData: { status: "closed" },
+                                    ticketId: ticket.id,
+                                    companyId: ticket.companyId,
+                                  });
                                 }
                               }).catch(function (error) {
                                 console.error(error);
@@ -1073,7 +1133,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyerro);
                           });
                         } else {
-                          await sendFinalizationMessage(ticket, contact, wbot);
+                          const bodyfinaliza = {
+                            text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                          };
+                          await sleep(2000)
+                          await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                          await UpdateTicketService({
+                            ticketData: { status: "closed" },
+                            ticketId: ticket.id,
+                            companyId: ticket.companyId,
+                          });
                         }
 
                         //
@@ -1115,6 +1184,8 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
           }
         }
       }
+
+
     }
   }
 
@@ -1341,7 +1412,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             };
                             await sleep(2000)
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyPdf);
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = {
+                              text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                            };
+                            await sleep(2000)
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                            await UpdateTicketService({
+                              ticketData: { status: "closed" },
+                              ticketId: ticket.id,
+                              companyId: ticket.companyId,
+                            });
                           } else {
                             await sleep(2000)
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body_mensagem);
@@ -1355,18 +1435,35 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                             };
                             await sleep(2000)
                             await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyqrcode);
-                            await sendFinalizationMessage(ticket, contact, wbot);
+                            const bodyfinaliza = {
+                              text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                            };
+                            await sleep(2000)
+                            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                            await UpdateTicketService({
+                              ticketData: { status: "closed" },
+                              ticketId: ticket.id,
+                              companyId: ticket.companyId,
+                            });
                           }
                         }).catch(function (error) {
                           console.error(error);
                         });
                         //FIM DA DESCONEXÃO
+
                       } else {
                         const bodyerro = {
                           text: formatBody(`Ops! Ocorreu um erro e nao consegui desbloquear!`, contact),
                         };
                         await sleep(2000)
                         await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyerro);
+                        await sleep(2000)
+                        await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body_mensagem);
+                        const bodyerroatendente = {
+                          text: formatBody(`Digite *#* e fale com um atendente!`, contact),
+                        };
+                        await sleep(2000)
+                        await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyerroatendente);
                       } /* else {
                                  const bodyerro = {
                   text: formatBody(`Ops! Ocorreu um erro e nao consegui desbloquear! Digite *#* e fale com um atendente!`
@@ -1388,7 +1485,16 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
                     };
                     await sleep(2000)
                     await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodysembloqueio);
-                    await sendFinalizationMessage(ticket, contact, wbot);
+                    const bodyfinaliza = {
+                      text: formatBody(`Estamos finalizando esta conversa! Caso precise entre em contato conosco!`, contact),
+                    };
+                    await sleep(2000)
+                    await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, bodyfinaliza);
+                    await UpdateTicketService({
+                      ticketData: { status: "closed" },
+                      ticketId: ticket.id,
+                      companyId: ticket.companyId,
+                    });
                   }
 
                   //
@@ -1410,6 +1516,12 @@ export const provider = async (ticket: Ticket, msg: proto.IWebMessageInfo, compa
               await sleep(2000)
               await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body);
             });
+          } else {
+            const body = {
+              text: formatBody(`Este CPF/CNPJ não é válido!\n\nPor favor tente novamente!\nOu digite *#* para voltar ao *Menu Anterior*`, contact),
+            };
+            await sleep(2000)
+            await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, body);
           }
         }
       }

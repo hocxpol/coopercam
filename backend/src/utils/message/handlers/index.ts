@@ -15,7 +15,7 @@ import FindOrCreateTicketService from "../../../services/TicketServices/FindOrCr
 import { provider } from "../../../services/WbotServices/providers";
 import { verifyQueue } from "../../queue";
 import FindOrCreateATicketTrakingService from "../../../services/TicketServices/FindOrCreateATicketTrakingService";
-import { verifyRating, handleRating, checkMessagesWithoutRating } from "../../rating";
+import { verifyRating, handleRating } from "../../rating";
 import { verifyMediaMessage } from "../../media";
 import VerifyCurrentSchedule from "../../../services/CompanyService/VerifyCurrentSchedule";
 import { debounce } from "../../../helpers/Debounce";
@@ -246,7 +246,8 @@ export const verifyMessage = async (
   try {
     // Atualiza o ticket com a última mensagem
     await ticket.update({
-      lastMessage: body
+      lastMessage: body,
+      fromMe: msg.key.fromMe
     });
 
     // Cria ou atualiza a mensagem no banco
@@ -312,17 +313,6 @@ export const checkOutOfHours = async (
 
     // Se não houver configuração de tipo de horário ou se estiver desabilitado, retorna false
     if (!scheduleType || scheduleType.value === "disabled") {
-      return { isOutOfHours: false, message: null };
-    }
-
-    // Verifica se o sistema está em avaliação
-    const ticketTraking = await FindOrCreateATicketTrakingService({
-      ticketId: ticket.id,
-      companyId: ticket.companyId,
-      whatsappId: ticket.whatsappId
-    });
-
-    if (ticketTraking && await verifyRating(ticketTraking)) {
       return { isOutOfHours: false, message: null };
     }
 
@@ -559,7 +549,7 @@ export const handleMessage = async (
         whatsappId: wbot.id!
       });
 
-      const isRating = ticketTraking !== null && await verifyRating(ticketTraking);
+      const isRating = ticketTraking !== null && verifyRating(ticketTraking);
 
       if (isRating) {
         const rate = parseFloat(bodyMessage);
@@ -568,8 +558,6 @@ export const handleMessage = async (
             `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
             { text: "Por favor, responda apenas com 1, 2 ou 3 para avaliar nosso atendimento." }
           );
-          // Verifica se excedeu o limite de tentativas
-          await checkMessagesWithoutRating(ticket, ticketTraking);
           return;
         }
         await handleRating(rate, ticket, ticketTraking);
@@ -590,37 +578,25 @@ export const handleMessage = async (
       if (!scheduleType || scheduleType.value === "disabled") {
         return;
       } else {
-        // Verifica se está em avaliação antes de verificar o horário
-        const ticketTraking = await FindOrCreateATicketTrakingService({
-          ticketId: ticket.id,
-          companyId,
-          whatsappId: wbot.id!
-        });
+        const currentSchedule = await VerifyCurrentSchedule(companyId);
+        const { isOutOfHours, message } = await checkOutOfHours(ticket, scheduleType, currentSchedule);
+        
+        if (isOutOfHours && message) {
+          // Atualiza o status do ticket para pending
+          await ticket.update({
+            status: "pending"
+          });
 
-        const isRating = ticketTraking !== null && await verifyRating(ticketTraking);
-
-        // Se não estiver em avaliação, verifica o horário
-        if (!isRating) {
-          const currentSchedule = await VerifyCurrentSchedule(companyId);
-          const { isOutOfHours, message } = await checkOutOfHours(ticket, scheduleType, currentSchedule);
-          
-          if (isOutOfHours && message) {
-            // Atualiza o status do ticket para pending
-            await ticket.update({
-              status: "pending"
-            });
-
-            // Salva a mensagem do usuário
-            if (hasMedia) {
-              mediaSent = await verifyMediaMessage(msg, ticket, contact);
-            } else {
-              await verifyMessage(msg, ticket, contact);
-            }
-
-            // Envia a mensagem de fora do expediente
-            await sendOutOfHoursMessage(wbot, ticket, message);
-            return;
+          // Salva a mensagem do usuário
+          if (hasMedia) {
+            mediaSent = await verifyMediaMessage(msg, ticket, contact);
+          } else {
+            await verifyMessage(msg, ticket, contact);
           }
+
+          // Envia a mensagem de fora do expediente
+          await sendOutOfHoursMessage(wbot, ticket, message);
+          return;
         }
       }
     }

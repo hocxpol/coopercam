@@ -200,24 +200,21 @@ async function handleSendMessage(job) {
 
 async function handleCloseTicketsAutomatic() {
   const job = new CronJob('*/1 * * * *', async () => {
-    try {
-      const companies = await Company.findAll();
-      for (const company of companies) {
-        try {
-          const companyId = company.id;
-          await ClosedAllOpenTickets(companyId);
-        } catch (e: any) {
-          Sentry.captureException(e);
-          logger.error("ClosedAllOpenTickets -> Verify: error", e.message);
-        }
+    const companies = await Company.findAll();
+    companies.map(async c => {
+
+      try {
+        const companyId = c.id;
+        await ClosedAllOpenTickets(companyId);
+      } catch (e: any) {
+        Sentry.captureException(e);
+        logger.error("ClosedAllOpenTickets -> Verify: error", e.message);
+        throw e;
       }
-    } catch (e: any) {
-      Sentry.captureException(e);
-      logger.error("handleCloseTicketsAutomatic -> error", e.message);
-    }
+
+    });
   });
-  job.start();
-  return job;
+  job.start()
 }
 
 async function handleVerifySchedules(job) {
@@ -777,18 +774,13 @@ async function handleDispatchCampaign(job) {
 
 async function handleLoginStatus(job) {
   const users: { id: number }[] = await sequelize.query(
-    `select id from "Users" 
-     where ("updatedAt" < now() - '1 minute'::interval and online = true)
-     or ("lastActivity" < now() - '1 minute'::interval and online = true)`,
+    `select id from "Users" where "updatedAt" < now() - '5 minutes'::interval and online = true`,
     { type: QueryTypes.SELECT }
   );
   for (let item of users) {
     try {
       const user = await User.findByPk(item.id);
-      await user.update({ 
-        online: false,
-        lastActivity: new Date()
-      });
+      await user.update({ online: false });
       logger.info(`Usuário passado para offline: ${item.id}`);
     } catch (e: any) {
       Sentry.captureException(e);
@@ -897,8 +889,7 @@ export async function startQueueProcess() {
 
   //queueMonitor.process("VerifyQueueStatus", handleVerifyQueue);
 
-  // Inicia o job de fechamento automático de tickets
-  const closeTicketsJob = await handleCloseTicketsAutomatic();
+
 
   scheduleMonitor.add(
     "Verify",

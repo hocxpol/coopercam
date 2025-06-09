@@ -219,13 +219,12 @@ Em validação:
 ---
 - Correção Dark mode
 - Exibir quantidade de filas em conexão
+- Remoção do espaço em inicio de frase de inatividade.
+- Fechamento automatico e correto do ticket.
 
 - Fecha automaticamente a avaliação 3 mensagens ignoradas. / Rating Index
 - Evita mandar mensagem de fora do expediente quando está em avaliação.
-- Remoção do espaço em inicio de frase de inatividade.
 - Monitoramento do status dos usuários
-
-- Correção Update Origem / Contato / Importação
 
 ---
 Correções a fazer.
