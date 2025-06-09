@@ -33,11 +33,13 @@ export const formatScheduleInfo = (schedules: any[]): string => {
 
   return schedules
     .map(schedule => {
+      // Converte o weekdayEn para o nome em português
       const weekday = weekdays[schedule.weekdayEn as keyof typeof weekdays] || schedule.weekdayEn;
       const startTime = formatTime(schedule.startTime);
       const endTime = formatTime(schedule.endTime);
       return `${weekday}: ${startTime} - ${endTime}`;
     })
+    .filter(line => line && !line.includes("undefined")) // Remove linhas inválidas
     .join("\n");
 };
 
