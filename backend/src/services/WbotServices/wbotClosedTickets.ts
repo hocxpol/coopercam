@@ -65,7 +65,7 @@ export const ClosedAllOpenTickets = async (companyId: number): Promise<void> => 
           expiresTicket
         } = whatsapp;
 
-        if (!expiresTicket || expiresTicket === "" || Number(expiresTicket) === 0 || Number(expiresTicket) <= 0) {
+        if (!expiresTicket || Number(expiresTicket) === 0 || Number(expiresTicket) <= 0) {
           continue;
         }
 
