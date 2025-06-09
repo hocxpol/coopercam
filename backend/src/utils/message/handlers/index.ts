@@ -323,7 +323,7 @@ export const checkOutOfHours = async (
         const whatsapp = await Whatsapp.findByPk(ticket.whatsappId);
         const company = await Company.findByPk(ticket.companyId);
         const scheduleInfo = formatScheduleInfo(company.schedules);
-        const message = whatsapp?.outOfHoursMessage || null;
+        const message = whatsapp?.outOfHoursMessage || "Estamos fora do horário de atendimento. Retornaremos em breve.";
         return { 
           isOutOfHours: true, 
           message: formatOutOfHoursMessage(message, scheduleInfo)
@@ -338,7 +338,7 @@ export const checkOutOfHours = async (
       if (!queue) return { isOutOfHours: false, message: null };
 
       // Se a fila não tiver configuração de horário, retorna false
-      if (!queue.schedules || !queue.outOfHoursMessage) {
+      if (!queue.schedules) {
         return { isOutOfHours: false, message: null };
       }
 
@@ -357,9 +357,10 @@ export const checkOutOfHours = async (
 
         if (now.isBefore(startTime) || now.isAfter(endTime)) {
           const scheduleInfo = formatScheduleInfo(schedules);
+          const message = queue.outOfHoursMessage || "Esta fila está fora do horário de atendimento. Retornaremos em breve.";
           return { 
             isOutOfHours: true, 
-            message: formatOutOfHoursMessage(queue.outOfHoursMessage, scheduleInfo)
+            message: formatOutOfHoursMessage(message, scheduleInfo)
           };
         }
       }
