@@ -46,52 +46,19 @@ export const formatScheduleInfo = (schedules: any[]): string => {
 
   const formattedSchedules = schedules
     .map(schedule => {
-      try {
-        // Validação do weekdayEn
-        if (!schedule.weekdayEn) {
-          logger.warn('Horário sem weekdayEn definido:', schedule);
-          return null;
-        }
-
-        const weekdayEn = schedule.weekdayEn.toLowerCase();
-        const weekday = weekdays[weekdayEn as keyof typeof weekdays];
-        
-        if (!weekday) {
-          logger.warn(`Dia da semana inválido: ${weekdayEn}`);
-          return null;
-        }
-
-        // Validação dos horários
-        const startTime = formatTime(schedule.startTime);
-        const endTime = formatTime(schedule.endTime);
-        
-        if (!startTime || !endTime) {
-          logger.warn(`Horários inválidos para ${weekday}:`, { startTime, endTime });
-          return null;
-        }
-
-        // Validação do formato dos horários
-        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
-          logger.warn(`Formato de horário inválido para ${weekday}:`, { startTime, endTime });
-          return null;
-        }
-
-        return `${weekday}: ${startTime} - ${endTime}`;
-      } catch (error) {
-        logger.error('Erro ao formatar horário:', error);
+      // Converte o weekdayEn para o nome em português
+      const weekday = weekdays[schedule.weekdayEn?.toLowerCase() as keyof typeof weekdays] || schedule.weekdayEn;
+      const startTime = formatTime(schedule.startTime);
+      const endTime = formatTime(schedule.endTime);
+      
+      // Se algum dos valores for undefined, retorna null para ser filtrado
+      if (!weekday || !startTime || !endTime) {
         return null;
       }
+      
+      return `${weekday}: ${startTime} - ${endTime}`;
     })
-    .filter((line): line is string => line !== null)
-    .sort((a, b) => {
-      // Ordena os dias da semana corretamente
-      const getDayOrder = (line: string) => {
-        const day = line.split(':')[0].toLowerCase();
-        return Object.values(weekdays).indexOf(day as any);
-      };
-      return getDayOrder(a) - getDayOrder(b);
-    });
+    .filter(line => line !== null); // Remove linhas inválidas
 
   return formattedSchedules.join("\n");
 };

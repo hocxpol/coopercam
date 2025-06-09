@@ -322,8 +322,6 @@ export const checkOutOfHours = async (
       return { isOutOfHours: false, message: null };
     }
 
-    const now = moment();
-
     if (scheduleType.value === "company") {
       if (isOutOfHours(currentSchedule)) {
         const whatsapp = await Whatsapp.findByPk(ticket.whatsappId);
@@ -354,10 +352,11 @@ export const checkOutOfHours = async (
       }
 
       const { schedules }: any = queue;
+      const now = moment();
       const weekday = now.format("dddd").toLowerCase();
 
       const schedule = schedules?.find(s => 
-        s.weekdayEn === weekday && 
+        s.weekdayEn.toLowerCase() === weekday && 
         s.startTime && 
         s.endTime
       );
