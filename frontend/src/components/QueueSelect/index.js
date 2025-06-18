@@ -30,14 +30,17 @@ const useStyles = makeStyles(theme => ({
 const QueueSelect = ({ selectedQueueIds, onChange, multiple = true, title = i18n.t("queueSelect.inputLabel") }) => {
 	const classes = useStyles();
 	const [queues, setQueues] = useState([]);
+	const companyId = localStorage.getItem("companyId");
 
 	useEffect(() => {
 		fetchQueues();
-	}, []);
+	}, [companyId]);
 
 	const fetchQueues = async () => {
 		try {
-			const { data } = await api.get("/queue");
+			const { data } = await api.get("/queue", {
+				params: { companyId }
+			});
 			setQueues(data);
 		} catch (err) {
 			toastError(err);

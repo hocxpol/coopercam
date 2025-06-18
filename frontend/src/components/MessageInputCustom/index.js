@@ -524,6 +524,7 @@ const CustomInput = (props) => {
         value={inputMessage}
         options={options}
         closeIcon={null}
+        disabled={disableOption()}
         getOptionLabel={(option) => {
           if (isObject(option)) {
             return option.label;
@@ -532,6 +533,7 @@ const CustomInput = (props) => {
           }
         }}
         onChange={(event, opt) => {
+          if (disableOption()) return;
           if (isObject(opt) && has(opt, "value") && isNil(opt.mediaPath)) {
             setInputMessage(opt.value);
             setTimeout(() => {
@@ -545,6 +547,7 @@ const CustomInput = (props) => {
           }
         }}
         onInputChange={(event, opt, reason) => {
+          if (disableOption()) return;
           if (reason === "input") {
             setInputMessage(event.target.value);
           }
@@ -761,7 +764,7 @@ const MessageInputCustom = (props) => {
       if (file) {
         const formData = new FormData();
         formData.append("medias", file);
-        formData.append("body", message || file.name);
+        formData.append("body", message ? message.trim() : file.name);
         formData.append("fromMe", true);
         await api.post(`/messages/${ticketId}`, formData);
       } else if (message) {
@@ -787,14 +790,13 @@ const MessageInputCustom = (props) => {
     setInputMessage("");
   };
 
-  const handleUploadMedia = async e => {
-    if (ticketStatus !== "open") return;
+  const handleUploadMedia = async (e) => {
     setLoading(true);
     e.preventDefault();
 
     const formData = new FormData();
     formData.append("fromMe", true);
-    medias.forEach(media => {
+    medias.forEach((media) => {
       formData.append("medias", media);
       formData.append("body", media.name);
     });
@@ -810,7 +812,7 @@ const MessageInputCustom = (props) => {
   };
 
   const handleSendMessage = async () => {
-    if (inputMessage.trim() === "" || ticketStatus !== "open") return;
+    if (inputMessage.trim() === "") return;
     setLoading(true);
 
     const message = {
@@ -848,7 +850,6 @@ const MessageInputCustom = (props) => {
   };
 
   const handleUploadAudio = async () => {
-    if (ticketStatus !== "open") return;
     setLoading(true);
     try {
       const [, blob] = await Mp3Recorder.stop().getMp3();

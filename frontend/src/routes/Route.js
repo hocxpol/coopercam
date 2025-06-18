@@ -23,7 +23,7 @@ const Route = ({ component: Component, isPrivate = false, ...rest }) => {
 		return <Redirect to="/login" />;
 	}
 
-	if (isAuth && !isPrivate) {
+	if (isAuth && !isPrivate && (rest.path === "/login" || rest.path === "/signup")) {
 		return <Redirect to="/" />;
 	}
 

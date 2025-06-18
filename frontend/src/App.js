@@ -23,11 +23,7 @@ const App = () => {
     const colorMode = React.useMemo(
         () => ({
             toggleColorMode: () => {
-                setMode((prevMode) => {
-                    const newMode = prevMode === "light" ? "dark" : "light";
-                    window.localStorage.setItem("preferredTheme", newMode);
-                    return newMode;
-                });
+                setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
             },
         }),
         []
