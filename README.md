@@ -253,11 +253,8 @@ Loop Infinito página queues devido a company ID | OK
 Navegação em filas/departamentos | OK
 Correção do horário de expediente | OK
 ------------
-2025.06.18
 - Mensagem de fora do expediente na conexão WhatsApp | OK
 - Force reconnect em conexão do WhatsApp | OK
-
-- Contagem correta do atendimento no Dashboard
 
 Correções a fazer.
 

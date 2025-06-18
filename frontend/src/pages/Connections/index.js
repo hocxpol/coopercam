@@ -285,6 +285,7 @@ const Connections = () => {
 						{i18n.t("connections.buttons.connecting")}
 					</Button>
 				)}
+				
 				{/* Botão de Reset sempre disponível */}
 				<Button
 					size="small"

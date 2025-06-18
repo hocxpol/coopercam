@@ -28,4 +28,5 @@ whatsappSessionRoutes.post(
   isAuth,
   WhatsAppSessionController.forceReset
 );
+
 export default whatsappSessionRoutes;

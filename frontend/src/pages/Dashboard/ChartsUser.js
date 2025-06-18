@@ -97,18 +97,10 @@ export const ChatsUser = () => {
 
     const handleGetTicketsInformation = async () => {
         try {
-            const formattedInitialDate = format(initialDate, 'yyyy-MM-dd');
-            const formattedFinalDate = format(finalDate, 'yyyy-MM-dd');
-            
-            console.log(`[ChatsUser] Buscando dados para: ${formattedInitialDate} até ${formattedFinalDate}`);
-            console.log(`[ChatsUser] CompanyId: ${companyId}`);
 
-            const { data } = await api.get(`/dashboard/ticketsUsers?initialDate=${formattedInitialDate}&finalDate=${formattedFinalDate}&companyId=${companyId}`);
-            
-            console.log(`[ChatsUser] Dados recebidos:`, data);
+            const { data } = await api.get(`/dashboard/ticketsUsers?initialDate=${format(initialDate, 'yyyy-MM-dd')}&finalDate=${format(finalDate, 'yyyy-MM-dd')}&companyId=${companyId}`);
             setTicketsData(data);
         } catch (error) {
-            console.error('[ChatsUser] Erro ao buscar dados:', error);
             toast.error('Erro ao obter informações da conversa');
         }
     }

@@ -180,6 +180,7 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
     };
     fetchPlanInfo();
   }, [getPlanCompany, user?.companyId]);
+
   useEffect(() => {
     api.get(`/settings`).then(({ data }) => {
       if (Array.isArray(data)) {
