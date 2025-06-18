@@ -196,9 +196,12 @@ const UpdateTicketService = async ({
         isBot: false
       });
 
-      ticketTraking.finishedAt = moment().toDate();
-      ticketTraking.whatsappId = ticket.whatsappId;
-      ticketTraking.userId = ticket.userId;
+      // CORREÇÃO: Garantir que finishedAt seja salvo no banco de dados
+      await ticketTraking.update({
+        finishedAt: moment().toDate(),
+        whatsappId: ticket.whatsappId,
+        userId: ticket.userId
+      });
     }
 
     // CORREÇÃO: Adicionado await no update do ticketTraking

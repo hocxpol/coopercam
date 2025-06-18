@@ -170,7 +170,6 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
         const planInfo = await getPlanCompany(null, user.companyId);
         if (planInfo) {
           setCurrentPlanId(planInfo.id);
-          setSchedulesEnabled(planInfo.schedulesEnabled || false);
           setShowOpenAi(planInfo.plan.useOpenAi || false);
           setShowIntegrations(planInfo.plan.useIntegrations || false);
           setShowExternalApi(planInfo.plan.useExternalApi || false);
@@ -181,6 +180,16 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
     };
     fetchPlanInfo();
   }, [getPlanCompany, user?.companyId]);
+  useEffect(() => {
+    api.get(`/settings`).then(({ data }) => {
+      if (Array.isArray(data)) {
+        const scheduleType = data.find((d) => d.key === "scheduleType");
+        if (scheduleType) {
+          setSchedulesEnabled(scheduleType.value === "company");
+        }
+      }
+    });
+  }, []);
 
   const handleSaveWhatsApp = async (values) => {
     const whatsappData = {
@@ -329,6 +338,23 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
                           margin="dense"
                         />
                       </Grid>
+                      {schedulesEnabled && (
+                        <Grid item xs={12}>
+                          <Field
+                            as={TextField}
+                            label={i18n.t("queueModal.form.outOfHoursMessage")}
+                            type="outOfHoursMessage"
+                            multiline
+                            rows={4}
+                            fullWidth
+                            name="outOfHoursMessage"
+                            error={touched.outOfHoursMessage && Boolean(errors.outOfHoursMessage)}
+                            helperText={touched.outOfHoursMessage && errors.outOfHoursMessage}
+                            variant="outlined"
+                            margin="dense"
+                          />
+                        </Grid>
+                      )}
                     </Grid>
                   </Paper>
                 )}
